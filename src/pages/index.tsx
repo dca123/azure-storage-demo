@@ -1,18 +1,18 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { saveAs } from "file-saver";
 
 import { api } from "~/utils/api";
 
 const Home: NextPage = () => {
   const downloadFileQuery = api.example.downloadFile.useMutation();
-  const [url, setUrl] = useState("");
   const handleClick = () => {
     downloadFileQuery.mutate(undefined, {
       onSuccess: (data) => {
-        setUrl(data.url);
+        const blob = new Blob([data.buffer], { type: "text/plain" });
+        saveAs(blob, "secret.txt");
       },
     });
   };
@@ -24,12 +24,6 @@ const Home: NextPage = () => {
   if (downloadFileQuery.isError) {
     statusMessage = "Error generating URL";
   }
-
-  useEffect(() => {
-    if (downloadFileQuery.isSuccess && url !== "") {
-      window.open(url, "_blank");
-    }
-  }, [downloadFileQuery.isSuccess, url]);
 
   return (
     <>
@@ -56,16 +50,6 @@ const Home: NextPage = () => {
             Generate File
           </button>
           <h2 className="text-center text-xl text-white">{statusMessage}</h2>
-          {downloadFileQuery.isSuccess ? (
-            <a
-              href={url}
-              download={true}
-              target="_blank"
-              className="px-4 py-2 text-white underline"
-            >
-              Download your file here
-            </a>
-          ) : null}
         </div>
       </main>
     </>
